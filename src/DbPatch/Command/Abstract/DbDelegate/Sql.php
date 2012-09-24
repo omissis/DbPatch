@@ -65,7 +65,7 @@
  * @link http://www.github.com/dbpatch/DbPatch
  * @since File available since Release 1.0.0
  */
-class DbPatch_Command_DbDelegate_Sql extends DbPatch_Command_DbDelegate_Abstract
+class DbPatch_Command_Abstract_DbDelegate_Sql extends DbPatch_Command_Abstract_DbDelegate_Abstract
 {
     /**
      *

@@ -65,7 +65,7 @@
  * @link http://www.github.com/dbpatch/DbPatch
  * @since File available since Release 1.0.0
  */
-interface DbPatch_Command_DbDelegate_Interface
+interface DbPatch_Command_Abstract_DbDelegate_Interface
 {
     /**
      * @return Zend_Db_Adapter_Abstract

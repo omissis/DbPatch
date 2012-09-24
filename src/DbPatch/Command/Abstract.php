@@ -60,7 +60,7 @@
  * @link http://www.github.com/dbpatch/DbPatch
  * @since File available since Release 1.0.0
  */
-abstract class DbPatch_Command_Abstract implements DbPatch_Command_DbDelegate_Interface
+abstract class DbPatch_Command_Abstract implements DbPatch_Command_Abstract_DbDelegate_Interface
 {
     /**
      * @var string
