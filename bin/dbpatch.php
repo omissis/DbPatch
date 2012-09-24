@@ -46,6 +46,12 @@ $base_include_folder = (strpos('@php_dir@', '@php_dir') === 0)
 // set path to add lib folder, load the Zend Autoloader and include the symfony timer
 set_include_path(realpath($base_include_folder) . PATH_SEPARATOR . get_include_path());
 
+// set path to add the include_paths exposed by composer
+$composer_include_paths = require_once dirname(__DIR__) . '/vendor/composer/include_paths.php';
+foreach ($composer_include_paths as $path) {
+    set_include_path($path . PATH_SEPARATOR . get_include_path());
+}
+
 require_once 'Zend/Loader/Autoloader.php';
 $autoloader = Zend_Loader_Autoloader::getInstance();
 $autoloader->registerNamespace('DbPatch_');
