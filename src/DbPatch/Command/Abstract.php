@@ -60,17 +60,12 @@
  * @link http://www.github.com/dbpatch/DbPatch
  * @since File available since Release 1.0.0
  */
-abstract class DbPatch_Command_Abstract
+abstract class DbPatch_Command_Abstract implements DbPatch_Command_DbDelegate_Interface
 {
     /**
      * @var string
      */
     const DEFAULT_BRANCH = 'default';
-
-    /**
-     * @var string
-     */
-    const TABLE = 'db_changelog';
 
     /**
      * @var string
@@ -108,10 +103,16 @@ abstract class DbPatch_Command_Abstract
     protected $options = array();
 
     /**
+     * @var DbPatch_Command_DbDelegate_Abstract
+     */
+    protected $dbDelegate = null;
+
+    /**
      * @abstract
      * @return void
      */
     abstract public function execute();
+
 
     /**
      * @throws DbPatch_Exception
@@ -119,6 +120,10 @@ abstract class DbPatch_Command_Abstract
      */
     public function init()
     {
+        $dbDelegateClass = 'DbPatch_Command_DbDelegate_' . ucfirst(strtolower($this->config->db->adapter));
+        $this->dbDelegate = new $dbDelegateClass();
+        $this->dbDelegate->init($this->getAdapter(), $this->getWriter(), 'db_changelog');
+
         if (!$this->validateChangelog()) {
             throw new DbPatch_Exception('Can\'t create changelog table');
         }
@@ -182,11 +187,19 @@ abstract class DbPatch_Command_Abstract
     }
 
     /**
-     * @return null|\Zend_Db_Adapter_Abstract
+     * @return null|\DbPatch_Core_Db
      */
     public function getDb()
     {
         return $this->db;
+    }
+
+    /**
+     * @return null|\Zend_Db_Adapter_Abstract
+     */
+    public function getAdapter()
+    {
+        return $this->db->getAdapter();
     }
 
     /**
@@ -204,6 +217,27 @@ abstract class DbPatch_Command_Abstract
     public function getOptions()
     {
         return $this->options;
+    }
+
+    function getChangelogContainerName()
+    {
+        return $this->dbDelegate->getChangelogContainerName();
+    }
+
+    function isPatchApplied($patchNumber, $branch) {
+        return $this->dbDelegate->isPatchApplied($patchNumber, $branch);
+    }
+
+    function updateColumnType() {
+        return $this->dbDelegate->updateColumnType();
+    }
+
+    function createChangelog() {
+        return $this->dbDelegate->createChangelog();
+    }
+
+    function addToChangelog($patchFile, $description = null) {
+        return $this->dbDelegate->addToChangelog($patchFile, $description);
     }
 
     /**
@@ -226,6 +260,7 @@ abstract class DbPatch_Command_Abstract
                     ->line("couldn't create a changelog table");
             return false;
         }
+
         return true;
     }
 
@@ -259,11 +294,10 @@ abstract class DbPatch_Command_Abstract
     public function getPatchPrefix()
     {
         if (isset($this->config->patch_prefix)) {
-            $prefix = $this->config->patch_prefix;
-        } else {
-            $prefix = self::PATCH_PREFIX;
+            return $this->config->patch_prefix;
         }
-        return $prefix;
+
+        return self::PATCH_PREFIX;
     }
 
     /**
@@ -272,40 +306,10 @@ abstract class DbPatch_Command_Abstract
     public function getPatchDirectory()
     {
         if (isset($this->config->patch_directory)) {
-            $dir = $this->trimTrailingSlashes($this->config->patch_directory);
-        } else {
-            $dir = self::PATCH_DIRECTORY;
+            return $this->trimTrailingSlashes($this->config->patch_directory);
         }
 
-        return $dir;
-    }
-
-    /**
-     * Check if the passed patch number can be found in the changelog table
-     * for the specified branch
-     *
-     * @param int $patchNumber
-     * @param string $branch
-     * @return boolean $result true if patch already applied; false if not
-     */
-    protected function isPatchApplied($patchNumber, $branch)
-    {
-        $db = $this->getDb()->getAdapter();
-        $query = sprintf("SELECT COUNT(patch_number) as applied
-                          FROM %s
-                          WHERE patch_number = %d
-                          AND branch = %s",
-                         $db->quoteIdentifier(self::TABLE),
-                         $patchNumber,
-                         $db->quote($branch));
-
-        $patchRecords = $db->fetchAll($query);
-
-        if ((int)$patchRecords[0]['applied'] == 0) {
-            return false;
-        }
-
-        return true;
+        return self::PATCH_DIRECTORY;
     }
 
     /**
@@ -418,7 +422,6 @@ abstract class DbPatch_Command_Abstract
         return $branches;
     }
 
-
     /**
      * @param int $patchNumber
      * @param string $branch
@@ -441,116 +444,12 @@ abstract class DbPatch_Command_Abstract
     {
         try {
             return in_array(
-                self::TABLE, $this->getDb()->getAdapter()->listTables()
+                $this->getChangelogContainerName(), $this->getDb()->getAdapter()->listTables()
             );
         } catch (Zend_Db_Adapter_Exception $e) {
             throw new DbPatch_Exception('Database error: ' . $e->getMessage());
         } catch (Exception $e) {
             return false;
-        }
-
-    }
-
-    /**
-     * Check column types
-     * return void
-     */
-    protected function updateColumnType()
-    {
-        $adapter = strtolower($this->config->db->adapter);
-        if (in_array($adapter, array('mysql', 'mysqli', 'pdo_mysql'))) {
-            $columns = $this->getDb()->getAdapter()->describeTable(self::TABLE);
-            foreach($columns as $columnName => $meta) {
-                if ($columnName == 'completed' && strtolower($meta['DATA_TYPE']) == 'timestamp') {
-                    $db = $this->getDb()->getAdapter();
-                    $db->query(sprintf("ALTER TABLE %s ADD completed2 int(11) NOT NULL DEFAULT 0 AFTER completed", $db->quoteIdentifier(self::TABLE)));
-                    $db->query(sprintf("UPDATE %s SET completed2 = UNIX_TIMESTAMP(completed)", $db->quoteIdentifier(self::TABLE)));
-                    $db->query(sprintf("ALTER TABLE %s DROP COLUMN completed, CHANGE completed2 completed INT(11) NOT NULL", $db->quoteIdentifier(self::TABLE)));
-                    $this->writer->line('Updated column type');
-                }
-            }
-        }
-    }
-
-    /**
-     * Try to create the changelog table
-     *
-     * @return bool
-     */
-    protected function createChangelog()
-    {
-        if ($this->changelogExists()) {
-            return true;
-        }
-
-        $db = $this->getDb()->getAdapter();
-
-        $db->query(
-            sprintf("
-             CREATE TABLE %s (
-             patch_number int NOT NULL,
-             branch varchar(50) NOT NULL,
-             completed int,
-             filename varchar(100) NOT NULL,
-             hash varchar(32) NOT NULL,
-             description varchar(200) default NULL,
-             PRIMARY KEY  (patch_number, branch)
-        )", $db->quoteIdentifier(self::TABLE)
-            ));
-
-
-        if (!$this->changelogExists()) {
-            return false;
-        }
-
-        $this->getWriter()->line(sprintf("changelog table '%s' created", self::TABLE));
-        $this->getWriter()->line("use 'dbpatch sync' to sync your patches");
-
-        return true;
-    }
-
-    /**
-     * Store patchfile entry to the changelog table
-     *
-     * @param array $patchFile
-     * @param string $description
-     * @return void
-     */
-    protected function addToChangelog($patchFile, $description = null)
-    {
-        if ($description == null) {
-            $description = $patchFile->description;
-        }
-
-        if($this->isPatchApplied($patchFile->patch_number, $patchFile->branch)) {
-             $this->writer->warning(
-                 sprintf(
-                     'Skip %s, already exists in the changelog',
-                     $patchFile->basename
-                 )
-             );
-         } else {
-            $db = $this->getDb()->getAdapter();
-
-            $sql = sprintf("
-                INSERT INTO %s (patch_number, branch, completed, filename, description, hash)
-                VALUES(%d, %s, %d, %s, %s, %s)",
-                           $db->quoteIdentifier(self::TABLE),
-                           $patchFile->patch_number,
-                           $db->quote($patchFile->branch),
-                           time(),
-                           $db->quote($patchFile->basename),
-                           $db->quote($description),
-                           $db->quote($patchFile->hash)
-            );
-
-            $db->query($sql);
-            $this->writer->line(
-                sprintf(
-                    'added %s to the changelog ',
-                    $patchFile->basename
-                )
-            );
         }
     }
 
@@ -609,14 +508,13 @@ abstract class DbPatch_Command_Abstract
      */
     protected function showHelp($command = null)
     {
-        $writer = $this->getWriter();
-        $writer->line('usage: dbpatch ' . $command . ' [<args>]')
-                ->line()
-                ->line('The args are:')
-                ->indent(2)->line('--config=<string>  Filename of the config file')
-                ->indent(2)->line('--branch=<string>  Branch name')
-                ->indent(2)->line('--color            Show colored output');
-
+        $this->getWriter()
+            ->line('usage: dbpatch ' . $command . ' [<args>]')
+            ->line()
+            ->line('The args are:')
+            ->indent(2)->line('--config=<string>  Filename of the config file')
+            ->indent(2)->line('--branch=<string>  Branch name')
+            ->indent(2)->line('--color            Show colored output');
     }
 
     /**
@@ -624,11 +522,9 @@ abstract class DbPatch_Command_Abstract
      * @param string $str String
      * @return string
      */
-    function trimTrailingSlashes( $str )
+    public function trimTrailingSlashes($str)
     {
         $str = trim($str);
         return $str == '/' ? $str : rtrim($str, '/');
     }
-
-
 }

@@ -4,6 +4,7 @@
  *
  * Copyright (c) 2011, Sandy Pleyte.
  * Copyright (c) 2010-2011, Martijn De Letter.
+ * Copyright (c) 2012, Claudio Beatrice.
  *
  * All rights reserved.
  *
@@ -40,51 +41,85 @@
  * @subpackage Command
  * @author Sandy Pleyte
  * @author Martijn De Letter
+ * @author Claudio Beatrice
  * @copyright 2011 Sandy Pleyte
  * @copyright 2010-2011 Martijn De Letter
+ * @copyright 2012 Claudio Beatrice
  * @license http://www.opensource.org/licenses/bsd-license.php BSD License
  * @link http://www.github.com/dbpatch/DbPatch
  * @since File available since Release 1.0.0
  */
 
 /**
- * Sync database command
+ * Abstract DbDelegate class
  *
  * @package DbPatch
  * @subpackage Command
  * @author Sandy Pleyte
  * @author Martijn De Letter
+ * @author Claudio Beatrice
  * @copyright 2011 Sandy Pleyte
  * @copyright 2010-2011 Martijn De Letter
+ * @copyright 2012 Claudio Beatrice
  * @license http://www.opensource.org/licenses/bsd-license.php BSD License
  * @link http://www.github.com/dbpatch/DbPatch
  * @since File available since Release 1.0.0
  */
-class DbPatch_Command_Sync extends DbPatch_Command_Abstract
+abstract class DbPatch_Command_DbDelegate_Abstract implements DbPatch_Command_DbDelegate_Interface
 {
     /**
+     * @var Zend_Db_Adapter_Abstract
+     */
+    protected $adapter;
+
+    /**
+     * @var DbPatch_Core_Writer
+     */
+    protected $writer;
+
+    /**
+     * @var string
+     */
+    protected $changelogContainerName;
+
+
+    /**
+     * Initialize the delegate
+     *
+     * @param Zend_Db_Adapter_Abstract $adapter
+     * @param DbPatch_Core_Writer $writer
+     * @param string $changelogContainerName
+     *
      * @return void
      */
-    public function execute()
+    public function init(Zend_Db_Adapter_Abstract $adapter, DbPatch_Core_Writer $writer, $changelogContainerName = 'db_changelog')
     {
-        $this->writer->line('start syncing...');
-        $branches = $this->detectBranches();
-
-        foreach ($branches as $branch) {
-            $patches = $this->getPatches($branch, '*');
-
-            foreach ($patches as $patch) {
-                $this->addToChangelog($patch);
-            }
-        }
-        $this->writer->line('sync completed');
+        $this->adapter = $adapter;
+        $this->writer = $writer;
+        $this->changelogContainerName = $changelogContainerName;
     }
 
     /**
-     * @return void
+     * {@inheritdoc}
      */
-    public function showHelp($command = 'sync')
+    public function getAdapter()
     {
-        parent::showHelp($command);
+        return $this->adapter;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getWriter()
+    {
+        return $this->writer;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getChangelogContainerName()
+    {
+        return $this->changelogContainerName;
     }
 }

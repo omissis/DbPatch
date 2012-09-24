@@ -60,12 +60,35 @@
  * @link http://www.github.com/dbpatch/DbPatch
  * @since File available since Release 1.0.0
  */
-class DbPatch_Command_Status extends DbPatch_Command_Abstract
+class DbPatch_Command_Status extends DbPatch_Command_Abstract implements DbPatch_Command_Status_DbDelegate_Interface
 {
     /**
      * @var int
      */
     const LIMIT = 10;
+
+    /**
+     * @var DbPatch_Command_Status_DbDelegate_Interface
+     */
+    protected $commandDbDelegate;
+
+    /**
+     * Initialize Command
+     *
+     * @return DbPatch_Command_Status
+     */
+    public function init()
+    {
+        parent::init();
+
+        $commandDbDelegateClass = 'DbPatch_Command_Status_DbDelegate_' . ucfirst(strtolower($this->config->db->adapter));
+
+        $this->commandDbDelegate = new $commandDbDelegateClass();
+
+        $this->commandDbDelegate->init($this->getDb()->getAdapter(), $this->getChangelogContainerName(), self::DEFAULT_BRANCH);
+
+        return $this;
+    }
 
     /**
      * @return void
@@ -195,33 +218,9 @@ class DbPatch_Command_Status extends DbPatch_Command_Abstract
      * @param string $branch
      * @return array
      */
-    protected function getAppliedPatches($branch = '')
+    public function getAppliedPatches($branch = '')
     {
-        $db = $this->getDb()->getAdapter();
-
-        $where = '';
-        if ($branch != '') {
-            $where = 'WHERE branch =\'' . $branch . '\'';
-        }
-
-        $sql = sprintf("
-            SELECT
-                patch_number,
-                completed,
-                filename,
-                description,
-                hash,
-                CASE WHEN branch='%s' THEN 0 ELSE 1 END AS branch_order
-            FROM %s
-            %s
-            ORDER BY completed DESC, branch_order ASC, patch_number DESC
-            ",
-                       self::DEFAULT_BRANCH,
-                       self::TABLE,
-                       $where
-        );
-
-        return $db->fetchAll($sql);
+        return $this->commandDbDelegate->getAppliedPatches($branch);
     }
 
     /**
@@ -231,6 +230,4 @@ class DbPatch_Command_Status extends DbPatch_Command_Abstract
     {
         parent::showHelp($command);
     }
-
-
 }

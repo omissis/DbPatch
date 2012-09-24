@@ -4,6 +4,7 @@
  *
  * Copyright (c) 2011, Sandy Pleyte.
  * Copyright (c) 2010-2011, Martijn De Letter.
+ * Copyright (c) 2012, Claudio Beatrice.
  *
  * All rights reserved.
  *
@@ -40,51 +41,37 @@
  * @subpackage Command
  * @author Sandy Pleyte
  * @author Martijn De Letter
+ * @author Claudio Beatrice
  * @copyright 2011 Sandy Pleyte
  * @copyright 2010-2011 Martijn De Letter
+ * @copyright 2012 Claudio Beatrice
  * @license http://www.opensource.org/licenses/bsd-license.php BSD License
  * @link http://www.github.com/dbpatch/DbPatch
  * @since File available since Release 1.0.0
  */
 
 /**
- * Sync database command
+ * Status Command DbDelegate interface
  *
  * @package DbPatch
  * @subpackage Command
  * @author Sandy Pleyte
  * @author Martijn De Letter
+ * @author Claudio Beatrice
  * @copyright 2011 Sandy Pleyte
  * @copyright 2010-2011 Martijn De Letter
+ * @copyright 2012 Claudio Beatrice
  * @license http://www.opensource.org/licenses/bsd-license.php BSD License
  * @link http://www.github.com/dbpatch/DbPatch
  * @since File available since Release 1.0.0
  */
-class DbPatch_Command_Sync extends DbPatch_Command_Abstract
+interface DbPatch_Command_Status_DbDelegate_Interface
 {
     /**
-     * @return void
+     * Get list of patches that are applied
+     *
+     * @param string $branch
+     * @return array
      */
-    public function execute()
-    {
-        $this->writer->line('start syncing...');
-        $branches = $this->detectBranches();
-
-        foreach ($branches as $branch) {
-            $patches = $this->getPatches($branch, '*');
-
-            foreach ($patches as $patch) {
-                $this->addToChangelog($patch);
-            }
-        }
-        $this->writer->line('sync completed');
-    }
-
-    /**
-     * @return void
-     */
-    public function showHelp($command = 'sync')
-    {
-        parent::showHelp($command);
-    }
+    function getAppliedPatches($branch = '');
 }

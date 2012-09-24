@@ -4,6 +4,7 @@
  *
  * Copyright (c) 2011, Sandy Pleyte.
  * Copyright (c) 2010-2011, Martijn De Letter.
+ * Copyright (c) 2012, Claudio Beatrice.
  *
  * All rights reserved.
  *
@@ -40,51 +41,48 @@
  * @subpackage Command
  * @author Sandy Pleyte
  * @author Martijn De Letter
+ * @author Claudio Beatrice
  * @copyright 2011 Sandy Pleyte
  * @copyright 2010-2011 Martijn De Letter
+ * @copyright 2012 Claudio Beatrice
  * @license http://www.opensource.org/licenses/bsd-license.php BSD License
  * @link http://www.github.com/dbpatch/DbPatch
  * @since File available since Release 1.0.0
  */
 
 /**
- * Sync database command
+ * Remove Command DbDelegate abstract class
  *
  * @package DbPatch
  * @subpackage Command
  * @author Sandy Pleyte
  * @author Martijn De Letter
+ * @author Claudio Beatrice
  * @copyright 2011 Sandy Pleyte
  * @copyright 2010-2011 Martijn De Letter
+ * @copyright 2012 Claudio Beatrice
  * @license http://www.opensource.org/licenses/bsd-license.php BSD License
  * @link http://www.github.com/dbpatch/DbPatch
  * @since File available since Release 1.0.0
  */
-class DbPatch_Command_Sync extends DbPatch_Command_Abstract
+abstract class DbPatch_Command_Remove_DbDelegate_Abstract implements DbPatch_Command_Remove_DbDelegate_Interface
 {
-    /**
-     * @return void
-     */
-    public function execute()
-    {
-        $this->writer->line('start syncing...');
-        $branches = $this->detectBranches();
+    protected $adapter;
 
-        foreach ($branches as $branch) {
-            $patches = $this->getPatches($branch, '*');
+    protected $changelogContainerName;
 
-            foreach ($patches as $patch) {
-                $this->addToChangelog($patch);
-            }
-        }
-        $this->writer->line('sync completed');
-    }
+    protected $writer;
 
     /**
+     *
+     * @param Zend_Db_Adapter_MongoDB $adapter
+     * @param string $changelogContainerName
+     *
      * @return void
      */
-    public function showHelp($command = 'sync')
-    {
-        parent::showHelp($command);
+    public function init(Zend_Db_Adapter_Abstract $adapter, $changelogContainerName, $writer) {
+        $this->adapter = $adapter->getAdapter();
+        $this->changelogContainerName = $changelogContainerName;
+        $this->writer = $writer;
     }
 }

@@ -4,6 +4,7 @@
  *
  * Copyright (c) 2011, Sandy Pleyte.
  * Copyright (c) 2010-2011, Martijn De Letter.
+ * Copyright (c) 2012, Claudio Beatrice.
  *
  * All rights reserved.
  *
@@ -40,51 +41,76 @@
  * @subpackage Command
  * @author Sandy Pleyte
  * @author Martijn De Letter
+ * @author Claudio Beatrice
  * @copyright 2011 Sandy Pleyte
  * @copyright 2010-2011 Martijn De Letter
+ * @copyright 2012 Claudio Beatrice
  * @license http://www.opensource.org/licenses/bsd-license.php BSD License
  * @link http://www.github.com/dbpatch/DbPatch
  * @since File available since Release 1.0.0
  */
 
 /**
- * Sync database command
+ * Remove Command SQL DbDelegate class
  *
  * @package DbPatch
  * @subpackage Command
  * @author Sandy Pleyte
  * @author Martijn De Letter
+ * @author Claudio Beatrice
  * @copyright 2011 Sandy Pleyte
  * @copyright 2010-2011 Martijn De Letter
+ * @copyright 2012 Claudio Beatrice
  * @license http://www.opensource.org/licenses/bsd-license.php BSD License
  * @link http://www.github.com/dbpatch/DbPatch
  * @since File available since Release 1.0.0
  */
-class DbPatch_Command_Sync extends DbPatch_Command_Abstract
+class DbPatch_Command_Remove_DbDelegate_Sql extends DbPatch_Command_Remove_DbDelegate_Abstract
 {
     /**
-     * @return void
+     * {@inheritdoc}
      */
-    public function execute()
+    public function removePatch($patchNumber, $branchName)
     {
-        $this->writer->line('start syncing...');
-        $branches = $this->detectBranches();
+        $branchSQL = "";
 
-        foreach ($branches as $branch) {
-            $patches = $this->getPatches($branch, '*');
-
-            foreach ($patches as $patch) {
-                $this->addToChangelog($patch);
-            }
+        if (!empty($branchName)) {
+            $branchSQL = sprintf("AND branch = '%s'", $branchName);
         }
-        $this->writer->line('sync completed');
-    }
 
-    /**
-     * @return void
-     */
-    public function showHelp($command = 'sync')
-    {
-        parent::showHelp($command);
+        $query = sprintf(
+            "SELECT branch FROM %s WHERE patch_number = %d {$branchSQL}",
+             $this->changelogContainerName,
+             $patchNumber
+        );
+
+        $stmt = $this->adapter->query($query);
+        $patchRecords = $stmt->fetchAll();
+
+        if (count($patchRecords) == 0) {
+            $branchMsg = (empty($branchName) ? "" : "for branch '$branchName' ");
+            $this->writer->line("Patch $patchNumber not found {$branchMsg} in `" . $this->changelogContainerName . "` table");
+        }
+        else if (count($patchRecords) > 1) {
+            // @todo this is not happening anymore ???????
+            $branchArray = array();
+            foreach ($patchRecords as $branch) {
+                $branchArray[] = $branch['branch'];
+            }
+
+            $this->writer->line("There's a patch '$patchNumber' in multiple branches: '" . implode("', '", $branchArray) . "'");
+            $this->writer->line("Specify the correct branch by adding: 'branch=" . implode("' or 'branch=", $branchArray) . "' to the command");
+        }
+        else {
+            $branchMsg = (empty($branchName) ? "" : "from branch '$branchName' ");
+            $query = sprintf(
+                "DELETE FROM %s WHERE patch_number = %d {$branchSQL}",
+                $this->changelogContainerName,
+                $patchNumber
+            );
+
+            $this->adapter->query($query);
+            $this->writer->line("Removed patch $patchNumber {$branchMsg}in the `" . $this->changelogContainerName . "` table");
+        }
     }
 }

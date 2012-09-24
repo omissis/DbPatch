@@ -60,8 +60,26 @@
  * @link http://www.github.com/dbpatch/DbPatch
  * @since File available since Release 1.0.0
  */
-class DbPatch_Command_Update extends DbPatch_Command_Abstract
+class DbPatch_Command_Update extends DbPatch_Command_Abstract implements DbPatch_Command_Update_DbDelegate_Interface
 {
+    /**
+     * Initialize Command
+     *
+     * @return DbPatch_Command_Status
+     */
+    public function init()
+    {
+        parent::init();
+
+        $commandDbDelegateClass = 'DbPatch_Command_Update_DbDelegate_' . ucfirst(strtolower($this->config->db->adapter));
+
+        $this->commandDbDelegate = new $commandDbDelegateClass();
+
+        $this->commandDbDelegate->init($this->getDb()->getAdapter(), $this->getChangelogContainerName(), self::DEFAULT_BRANCH);
+
+        return $this;
+    }
+
     /**
      * @return void
      */
@@ -163,34 +181,9 @@ class DbPatch_Command_Update extends DbPatch_Command_Abstract
      * @param string $branch
      * @return array
      */
-    protected function getAppliedPatches($limit, $branch = '')
+    public function getAppliedPatches($limit, $branch = '')
     {
-        $db = $this->getDb()->getAdapter();
-
-        $where = '';
-        if ($branch != '') {
-            $where = 'WHERE branch = ' . $db->quote($branch);
-        }
-
-        $sql = sprintf("
-            SELECT
-                patch_number,
-                completed,
-                filename,
-                description,
-                CASE WHEN branch=%s THEN 0 ELSE 1 END as branch_order
-            FROM %s
-            %s
-            ORDER BY completed DESC, branch_order ASC, patch_number DESC
-            LIMIT %d",
-                       $db->quote(self::DEFAULT_BRANCH),
-                       $db->quoteIdentifier(self::TABLE),
-                       $where,
-                       (int)$limit
-        );
-
-        return $db->fetchAll($sql);
-
+        return $this->commandDbDelegate->getAppliedPatches($limit, $branch);
     }
 
 
