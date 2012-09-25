@@ -60,7 +60,7 @@
  * @link http://www.github.com/dbpatch/DbPatch
  * @since File available since Release 1.0.0
  */
-class DbPatch_Core_Db
+class DbPatch_Core_Db implements DbPatch_Core_Db_DbDelegate_Interface
 {
     /**
      * @var null|\Zend_Db_Adapter_Abstract
@@ -71,6 +71,11 @@ class DbPatch_Core_Db
      * @var Zend_Config $config
      */
     protected $config = null;
+
+    /**
+     * @var DbPatch_Core_Db_DbDelegate_Interface
+     */
+    protected $dbDelegate = null;
 
     /**
      * @param \Zend_Config|\Zend_Config_Ini|\Zend_Config_Xml $config
@@ -90,8 +95,34 @@ class DbPatch_Core_Db
             );
         }
 
+        $dbDelegateClass = $this->getDbDelegateClass();
+        $this->dbDelegate = new $dbDelegateClass($this->config);
+
         // Enable compatibility for the bin_dir setting
         $this->enableOldConfigCompatibility();
+    }
+
+    /**
+     * Return the Database Delegate Class to use
+     *
+     * @param string $prefix
+     *
+     * @return string
+     */
+    protected function getDbDelegateClass($prefix = 'DbPatch_Core_Db_DbDelegate_')
+    {
+        $adapterName = strtolower($this->config->db->adapter);
+
+        switch ($adapterName) {
+            case 'mongodb':
+                $dbDelegateClass = $prefix . 'MongoDB';
+                break;
+            default:
+                $dbDelegateClass = $prefix . 'Sql';
+                break;
+        }
+
+        return $dbDelegateClass;
     }
 
     /**
@@ -164,7 +195,7 @@ class DbPatch_Core_Db
     }
 
     /**
-     * Reconnect to the database, this will create 
+     * Reconnect to the database, this will create
      * a new adapter instance.
      *
      * @return DbPatch_Core_Db
@@ -211,30 +242,8 @@ class DbPatch_Core_Db
      *
      * @return DbPatch_Core_Db
      */
-    protected function enableOldConfigCompatibility()
+    public function enableOldConfigCompatibility()
     {
-        $options = '-h{host} {%port%}-P{port} {%port%}-u{username} {%password%}-p{password} {%password%}--default-character-set={charset} {dbname}';
-
-        if (!isset($this->config->dump_command)) {
-            $dir = '';
-
-            if (isset($this->config->db->bin_dir)) {
-                $dir = $this->config->db->bin_dir . DIRECTORY_SEPARATOR;
-            }
-
-            $this->config->dump_command = "{$dir}mysqldump {$options} > {filename} 2>&1";
-        }
-
-        if (!isset($this->config->import_command)) {
-            $dir = '';
-
-            if (isset($this->config->db->bin_dir)) {
-                $dir = $this->config->db->bin_dir . DIRECTORY_SEPARATOR;
-            }
-
-            $this->config->import_command = "{$dir}mysql {$options} < {filename} 2>&1";
-        }
-
-        return $this;
+        return $this->dbDelegate->enableOldConfigCompatibility();
     }
 }
