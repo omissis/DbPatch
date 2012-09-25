@@ -81,7 +81,7 @@ abstract class DbPatch_Command_Update_DbDelegate_Abstract implements DbPatch_Com
      * @return void
      */
     public function init(Zend_Db_Adapter_Abstract $adapter, $changelogContainerName, $defaultBranch) {
-        $this->adapter = $adapter->getAdapter();
+        $this->adapter = $adapter;
         $this->changelogContainerName = $changelogContainerName;
         $this->defaultBranch = $defaultBranch;
     }

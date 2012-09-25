@@ -81,7 +81,7 @@ abstract class DbPatch_Command_Remove_DbDelegate_Abstract implements DbPatch_Com
      * @return void
      */
     public function init(Zend_Db_Adapter_Abstract $adapter, $changelogContainerName, $writer) {
-        $this->adapter = $adapter->getAdapter();
+        $this->adapter = $adapter;
         $this->changelogContainerName = $changelogContainerName;
         $this->writer = $writer;
     }
