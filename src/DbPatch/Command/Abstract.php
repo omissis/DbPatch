@@ -268,9 +268,8 @@ abstract class DbPatch_Command_Abstract implements DbPatch_Command_Abstract_DbDe
         return $this->dbDelegate->addToChangelog($patchFile, $description);
     }
 
-    function getDumpFilename()
+    function getDumpFilename($filename = null)
     {
-        $filename = null;
         if ($this->console->issetOption('file')) {
             $filename = $this->console->getOptionValue('file', null);
         }
