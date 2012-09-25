@@ -179,9 +179,8 @@ class DbPatch_Command_Abstract_DbDelegate_MongoDB extends DbPatch_Command_Abstra
      *
      * {@inheritdoc}
      */
-    public function getDumpFilename()
+    public function getDumpFilename($filename = null)
     {
-        // TODO: file option should be passed
-        return 'dump';
+        return empty($filename) ? 'dump' : $filename;
     }
 }

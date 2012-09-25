@@ -206,17 +206,10 @@ class DbPatch_Command_Abstract_DbDelegate_Sql extends DbPatch_Command_Abstract_D
      *
      * {@inheritdoc}
      */
-    public function getDumpFilename()
+    public function getDumpFilename($filename = null)
     {
-        $filename = null;
-        $config = $this->adapter->getConfig();
+        $config   = $this->adapter->getConfig();
         $database = $config['dbname'];
-
-        // TODO: $this->console is not available, file option should be passed
-        $filename = 'dump';
-        // if ($this->console->issetOption('file')) {
-        //     $filename = $this->console->getOptionValue('file', null);
-        // }
 
         if (is_null($filename)) {
             // split by slash, database name can be a path (in case of SQLite)
@@ -225,11 +218,9 @@ class DbPatch_Command_Abstract_DbDelegate_Sql extends DbPatch_Command_Abstract_D
         }
 
         if (isset($this->config->dump_directory)) {
-            $filename = $this->trimTrailingSlashes($this->config->dump_directory) . '/' . $filename;
-        } else {
-            $filename = './' . $filename;
+            return $this->trimTrailingSlashes($this->config->dump_directory) . '/' . $filename;
         }
 
-        return $filename;
+        return './' . $filename;
     }
 }

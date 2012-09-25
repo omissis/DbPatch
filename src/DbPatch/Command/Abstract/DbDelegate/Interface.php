@@ -126,5 +126,5 @@ interface DbPatch_Command_Abstract_DbDelegate_Interface
      * Create dump filename
      * @return string
      */
-    function getDumpFilename();
+    function getDumpFilename($filename = null);
 }

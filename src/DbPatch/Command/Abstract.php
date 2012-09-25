@@ -270,7 +270,11 @@ abstract class DbPatch_Command_Abstract implements DbPatch_Command_Abstract_DbDe
 
     function getDumpFilename()
     {
-        return $this->dbDelegate->getDumpFilename();
+        $filename = null;
+        if ($this->console->issetOption('file')) {
+            $filename = $this->console->getOptionValue('file', null);
+        }
+        return $this->dbDelegate->getDumpFilename($filename);
     }
 
     /**
