@@ -77,21 +77,20 @@ class DbPatch_Command_Status_DbDelegate_Sql extends DbPatch_Command_Status_DbDel
             $where = 'WHERE branch =\'' . $branch . '\'';
         }
 
-        $sql = sprintf("
-            SELECT
+        $sql = sprintf(
+            "SELECT
                 patch_number,
                 completed,
                 filename,
                 description,
                 hash,
-                CASE WHEN branch='%s' THEN 0 ELSE 1 END AS branch_order
+                CASE WHEN branch=%s THEN 0 ELSE 1 END AS branch_order
             FROM %s
             %s
-            ORDER BY completed DESC, branch_order ASC, patch_number DESC
-            ",
-                       $db->quote($this->defaultBranch),
-                       $db->quoteIdentifier($this->changelogContainerName),
-                       $where
+            ORDER BY completed DESC, branch_order ASC, patch_number DESC",
+            $this->adapter->quote($this->defaultBranch),
+            $this->adapter->quoteIdentifier($this->changelogContainerName),
+            $where
         );
 
         return $this->adapter->fetchAll($sql);
