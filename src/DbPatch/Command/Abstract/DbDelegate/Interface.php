@@ -83,6 +83,12 @@ interface DbPatch_Command_Abstract_DbDelegate_Interface
     function getChangelogContainerName();
 
     /**
+     * Checks if the changelog table is present in the database
+     * @return bool
+     */
+    function changelogExists();
+
+    /**
      * Check if the passed patch number can be found in the changelog table
      * for the specified branch
      *

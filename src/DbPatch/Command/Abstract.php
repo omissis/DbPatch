@@ -113,6 +113,28 @@ abstract class DbPatch_Command_Abstract implements DbPatch_Command_Abstract_DbDe
      */
     abstract public function execute();
 
+    /**
+     * Return the Database Delegate Class to use
+     *
+     * @param string $prefix
+     *
+     * @return string
+     */
+    protected function getDbDelegateClass($prefix = 'DbPatch_Command_Abstract_DbDelegate_')
+    {
+        $adapterName = strtolower($this->config->db->adapter);
+
+        switch ($adapterName) {
+            case 'mongodb':
+                $dbDelegateClass = $prefix . 'MongoDB';
+                break;
+            default:
+                $dbDelegateClass = $prefix . 'Sql';
+                break;
+        }
+
+        return $dbDelegateClass;
+    }
 
     /**
      * @throws DbPatch_Exception
@@ -120,7 +142,8 @@ abstract class DbPatch_Command_Abstract implements DbPatch_Command_Abstract_DbDe
      */
     public function init()
     {
-        $dbDelegateClass = 'DbPatch_Command_Abstract_DbDelegate_' . ucfirst(strtolower($this->config->db->adapter));
+        $dbDelegateClass = $this->getDbDelegateClass();
+
         $this->dbDelegate = new $dbDelegateClass();
         $this->dbDelegate->init($this->getAdapter(), $this->getWriter(), 'db_changelog');
 
@@ -222,6 +245,11 @@ abstract class DbPatch_Command_Abstract implements DbPatch_Command_Abstract_DbDe
     function getChangelogContainerName()
     {
         return $this->dbDelegate->getChangelogContainerName();
+    }
+
+    function changelogExists()
+    {
+        return $this->dbDelegate->changelogExists();
     }
 
     function isPatchApplied($patchNumber, $branch) {
@@ -354,7 +382,6 @@ abstract class DbPatch_Command_Abstract implements DbPatch_Command_Abstract_DbDe
             }
             if (preg_match($pattern, $fileinfo->getFilename(), $matches)) {
                 $patchNumber = (int)$matches[1];
-
                 if ((!is_null($searchPatchNumber) && $searchPatchNumber != '*' && $patchNumber != $searchPatchNumber) ||
                     is_null($searchPatchNumber) && $this->isPatchApplied($patchNumber, $branch)
                 ) {
@@ -439,23 +466,6 @@ abstract class DbPatch_Command_Abstract implements DbPatch_Command_Abstract_DbDe
             return $patches[$patchNumber];
         }
         return false;
-    }
-
-    /**
-     * Checks if the changelog table is present in the database
-     * @return bool
-     */
-    protected function changelogExists()
-    {
-        try {
-            return in_array(
-                $this->getChangelogContainerName(), $this->getDb()->getAdapter()->listTables()
-            );
-        } catch (Zend_Db_Adapter_Exception $e) {
-            throw new DbPatch_Exception('Database error: ' . $e->getMessage());
-        } catch (Exception $e) {
-            return false;
-        }
     }
 
     /**
