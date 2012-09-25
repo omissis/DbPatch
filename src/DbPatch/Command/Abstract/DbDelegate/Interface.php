@@ -115,4 +115,10 @@ interface DbPatch_Command_Abstract_DbDelegate_Interface
      * @return void
      */
     function addToChangelog($patchFile, $description = null);
+
+    /**
+     * Create dump filename
+     * @return string
+     */
+    function getDumpFilename();
 }

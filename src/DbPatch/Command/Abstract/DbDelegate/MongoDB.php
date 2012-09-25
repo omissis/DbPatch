@@ -85,7 +85,7 @@ class DbPatch_Command_Abstract_DbDelegate_MongoDB extends DbPatch_Command_Abstra
             $patchRecords[] = $document;
         }
 
-        if (isset($patchRecords[0]) && isset($patchRecords[0]['applied']) && (int)$patchRecords[0]['applied'] == 0) {
+        if (!isset($patchRecords[0]) || !isset($patchRecords[0]['applied']) || (int)$patchRecords[0]['applied'] == 0) {
             return false;
         }
 
@@ -172,5 +172,14 @@ class DbPatch_Command_Abstract_DbDelegate_MongoDB extends DbPatch_Command_Abstra
             }
         }
         return false;
+    }
+
+    /**
+     *
+     * {@inheritdoc}
+     */
+    public function getDumpFilename()
+    {
+        return 'dump';
     }
 }

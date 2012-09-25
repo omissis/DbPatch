@@ -120,7 +120,7 @@ abstract class DbPatch_Command_Abstract implements DbPatch_Command_Abstract_DbDe
      */
     public function init()
     {
-        $dbDelegateClass = 'DbPatch_Command_DbDelegate_' . ucfirst(strtolower($this->config->db->adapter));
+        $dbDelegateClass = 'DbPatch_Command_Abstract_DbDelegate_' . ucfirst(strtolower($this->config->db->adapter));
         $this->dbDelegate = new $dbDelegateClass();
         $this->dbDelegate->init($this->getAdapter(), $this->getWriter(), 'db_changelog');
 
@@ -238,6 +238,11 @@ abstract class DbPatch_Command_Abstract implements DbPatch_Command_Abstract_DbDe
 
     function addToChangelog($patchFile, $description = null) {
         return $this->dbDelegate->addToChangelog($patchFile, $description);
+    }
+
+    function getDumpFilename()
+    {
+        return $this->dbDelegate->getDumpFilename();
     }
 
     /**
@@ -469,35 +474,6 @@ abstract class DbPatch_Command_Abstract implements DbPatch_Command_Abstract_DbDe
             return false;
         }
         return true;
-    }
-
-    /**
-     * Create dump filename
-     * @return string
-     */
-    protected function getDumpFilename()
-    {
-        $filename = null;
-        $config = $this->getDb()->getAdapter()->getConfig();
-        $database = $config['dbname'];
-
-        if ($this->console->issetOption('file')) {
-            $filename = $this->console->getOptionValue('file', null);
-        }
-
-        if (is_null($filename)) {
-            // split by slash, database name can be a path (in case of SQLite)
-            $parts    = explode(DIRECTORY_SEPARATOR, $database);
-            $filename = array_pop($parts) . '_' . date('Ymd_His') . '.sql';
-        }
-
-        if (isset($this->config->dump_directory)) {
-            $filename = $this->trimTrailingSlashes($this->config->dump_directory) . '/' . $filename;
-        } else {
-            $filename = './' . $filename;
-        }
-
-        return $filename;
     }
 
     /**

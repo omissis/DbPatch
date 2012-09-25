@@ -189,4 +189,33 @@ class DbPatch_Command_Abstract_DbDelegate_Sql extends DbPatch_Command_Abstract_D
             );
         }
     }
+
+    /**
+     *
+     * {@inheritdoc}
+     */
+    public function getDumpFilename()
+    {
+        $filename = null;
+        $config = $this->getDb()->getAdapter()->getConfig();
+        $database = $config['dbname'];
+
+        if ($this->console->issetOption('file')) {
+            $filename = $this->console->getOptionValue('file', null);
+        }
+
+        if (is_null($filename)) {
+            // split by slash, database name can be a path (in case of SQLite)
+            $parts    = explode(DIRECTORY_SEPARATOR, $database);
+            $filename = array_pop($parts) . '_' . date('Ymd_His') . '.sql';
+        }
+
+        if (isset($this->config->dump_directory)) {
+            $filename = $this->trimTrailingSlashes($this->config->dump_directory) . '/' . $filename;
+        } else {
+            $filename = './' . $filename;
+        }
+
+        return $filename;
+    }
 }
