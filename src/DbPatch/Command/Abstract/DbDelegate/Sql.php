@@ -96,6 +96,7 @@ class DbPatch_Command_Abstract_DbDelegate_Sql extends DbPatch_Command_Abstract_D
      */
     public function updateColumnType()
     {
+        // TODO pass the config->db->adapter in order to check if the column name should be updated
         // $adapter = strtolower($this->config->db->adapter);
         // if (in_array($adapter, array('mysql', 'mysqli', 'pdo_mysql'))) {
             $columns = $this->adapter->describeTable($this->getChangelogContainerName());
