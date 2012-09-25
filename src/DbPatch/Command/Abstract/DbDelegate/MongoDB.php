@@ -69,7 +69,7 @@ class DbPatch_Command_Abstract_DbDelegate_MongoDB extends DbPatch_Command_Abstra
 {
     public function selectCollection()
     {
-        return $this->getAdapter()->selectCollection($this->getChangelogContainerName());
+        return $this->adapter->selectCollection($this->changelogContainerName);
     }
 
     /**
@@ -78,18 +78,13 @@ class DbPatch_Command_Abstract_DbDelegate_MongoDB extends DbPatch_Command_Abstra
      */
     public function isPatchApplied($patchNumber, $branch)
     {
-        $cursor = $this->selectCollection()->find(array('patch_number' => $patchNumber, 'branch' => $branch));
 
-        $patchRecords = array();
-        foreach ($cursor as $document) {
-            $patchRecords[] = $document;
-        }
+        $cursor = $this->selectCollection()->find(array(
+            'patch_number' => $patchNumber,
+            'branch' => $branch
+        ));
 
-        if (!isset($patchRecords[0]) || !isset($patchRecords[0]['applied']) || (int)$patchRecords[0]['applied'] == 0) {
-            return false;
-        }
-
-        return true;
+        return $cursor->count() === 1;
     }
 
     /**
@@ -97,7 +92,7 @@ class DbPatch_Command_Abstract_DbDelegate_MongoDB extends DbPatch_Command_Abstra
      */
     public function updateColumnType()
     {
-        // What's the point of this function?
+        // NOTE Does this method make sense for MongoDB?
     }
 
     /**
@@ -110,14 +105,14 @@ class DbPatch_Command_Abstract_DbDelegate_MongoDB extends DbPatch_Command_Abstra
         }
 
         // Create Collection
-        $this->getAdapter()->getAdapter()->createCollection($this->getChangelogContainerName());
+        $this->adapter->getMongoDB()->createCollection($this->changelogContainerName);
 
         if (!$this->changelogExists()) {
             return false;
         }
 
-        $this->getWriter()->line(sprintf("changelog table '%s' created", $this->getChangelogContainerName()));
-        $this->getWriter()->line("use 'dbpatch sync' to sync your patches");
+        $this->writer->line(sprintf("changelog table '%s' created", $this->changelogContainerName));
+        $this->writer->line("use 'dbpatch sync' to sync your patches");
 
         return true;
     }
@@ -132,7 +127,7 @@ class DbPatch_Command_Abstract_DbDelegate_MongoDB extends DbPatch_Command_Abstra
         }
 
         if ($this->isPatchApplied($patchFile->patch_number, $patchFile->branch)) {
-             $this->getWriter()->warning(
+             $this->writer->warning(
                  sprintf(
                      'Skip %s, already exists in the changelog',
                      $patchFile->basename
@@ -148,7 +143,7 @@ class DbPatch_Command_Abstract_DbDelegate_MongoDB extends DbPatch_Command_Abstra
                 'hash'         => $patchFile->hash,
             ), array('safe' => true));
 
-            $this->getWriter()->line(
+            $this->writer->line(
                 sprintf(
                     'added %s to the changelog ',
                     $patchFile->basename
@@ -164,8 +159,8 @@ class DbPatch_Command_Abstract_DbDelegate_MongoDB extends DbPatch_Command_Abstra
      */
     public function changelogExists()
     {
-        $collections = $this->getAdapter()->listCollections();
-        $changelogContainerName = $this->getChangelogContainerName();
+        $collections = $this->adapter->listCollections();
+        $changelogContainerName = $this->changelogContainerName;
         foreach ($collections as $collection) {
             if ($changelogContainerName === $collection->getName()) {
                 return true;
@@ -180,6 +175,7 @@ class DbPatch_Command_Abstract_DbDelegate_MongoDB extends DbPatch_Command_Abstra
      */
     public function getDumpFilename()
     {
+        // TODO: file option should be passed
         return 'dump';
     }
 }
