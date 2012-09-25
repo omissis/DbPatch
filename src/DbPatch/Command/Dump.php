@@ -78,15 +78,6 @@ class DbPatch_Command_Dump extends DbPatch_Command_Abstract
     }
 
     /**
-     * Prevent db_changelog creation
-     * @return DbPatch_Command_Dump
-     */
-    public function init()
-    {
-        return $this;
-    }
-
-    /**
      * @return void
      */
     public function showHelp($command = 'dump')
