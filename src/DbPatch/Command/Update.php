@@ -102,10 +102,11 @@ class DbPatch_Command_Update extends DbPatch_Command_Abstract implements DbPatch
             return;
         }
 
-        $this->writer->line(sprintf('found %d patch %s',
-                                    count($patchFiles),
-                                    (count($patchFiles) == 1) ? 'file' : 'files'
-                            ));
+        $this->writer->line(sprintf(
+            'found %d patch %s',
+            count($patchFiles),
+            (count($patchFiles) == 1) ? 'file' : 'files'
+        ));
 
         if ($createDump) {
             $config = $this->getDb()->getAdapter()->getConfig();

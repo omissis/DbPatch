@@ -93,12 +93,10 @@ class DbPatch_Command_Update_DbDelegate_MongoDB extends DbPatch_Command_Update_D
 
         $documents = array();
         foreach ($cursor as $document) {
-            $document['branch'] = (int)($document['branch'] === $this->defaultBranch);
+            $document['branch'] = (int)($document['branch'] !== $this->defaultBranch);
 
             $documents[] = $document;
         }
-
-        // var_dump($documents);exit;
 
         // TODO: sort $documents array by completed DESC, branch ASC, patch_number DESC
 
