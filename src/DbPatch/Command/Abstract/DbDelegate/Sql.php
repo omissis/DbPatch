@@ -73,16 +73,15 @@ class DbPatch_Command_Abstract_DbDelegate_Sql extends DbPatch_Command_Abstract_D
      */
     public function isPatchApplied($patchNumber, $branch)
     {
-        $db = $this->getDb()->getAdapter();
         $query = sprintf("SELECT COUNT(patch_number) as applied
                           FROM %s
                           WHERE patch_number = %d
                           AND branch = %s",
-                         $db->quoteIdentifier($this->getChangelogContainerName()),
+                         $this->adapter->quoteIdentifier($this->getChangelogContainerName()),
                          $patchNumber,
-                         $db->quote($branch));
+                         $this->adapter->quote($branch));
 
-        $patchRecords = $db->fetchAll($query);
+        $patchRecords = $this->adapter->fetchAll($query);
 
         if ((int)$patchRecords[0]['applied'] == 0) {
             return false;
@@ -97,19 +96,18 @@ class DbPatch_Command_Abstract_DbDelegate_Sql extends DbPatch_Command_Abstract_D
      */
     public function updateColumnType()
     {
-        $adapter = strtolower($this->config->db->adapter);
-        if (in_array($adapter, array('mysql', 'mysqli', 'pdo_mysql'))) {
-            $columns = $this->getDb()->getAdapter()->describeTable($this->getChangelogContainerName());
+        // $adapter = strtolower($this->config->db->adapter);
+        // if (in_array($adapter, array('mysql', 'mysqli', 'pdo_mysql'))) {
+            $columns = $this->adapter->describeTable($this->getChangelogContainerName());
             foreach($columns as $columnName => $meta) {
                 if ($columnName == 'completed' && strtolower($meta['DATA_TYPE']) == 'timestamp') {
-                    $db = $this->getDb()->getAdapter();
-                    $db->query(sprintf("ALTER TABLE %s ADD completed2 int(11) NOT NULL DEFAULT 0 AFTER completed", $db->quoteIdentifier($this->getChangelogContainerName())));
-                    $db->query(sprintf("UPDATE %s SET completed2 = UNIX_TIMESTAMP(completed)", $db->quoteIdentifier($this->getChangelogContainerName())));
-                    $db->query(sprintf("ALTER TABLE %s DROP COLUMN completed, CHANGE completed2 completed INT(11) NOT NULL", $db->quoteIdentifier($this->getChangelogContainerName())));
+                    $this->adapter->query(sprintf("ALTER TABLE %s ADD completed2 int(11) NOT NULL DEFAULT 0 AFTER completed", $this->adapter->quoteIdentifier($this->getChangelogContainerName())));
+                    $this->adapter->query(sprintf("UPDATE %s SET completed2 = UNIX_TIMESTAMP(completed)", $this->adapter->quoteIdentifier($this->getChangelogContainerName())));
+                    $this->adapter->query(sprintf("ALTER TABLE %s DROP COLUMN completed, CHANGE completed2 completed INT(11) NOT NULL", $this->adapter->quoteIdentifier($this->getChangelogContainerName())));
                     $this->writer->line('Updated column type');
                 }
             }
-        }
+        // }
     }
 
     /**
@@ -122,9 +120,7 @@ class DbPatch_Command_Abstract_DbDelegate_Sql extends DbPatch_Command_Abstract_D
             return true;
         }
 
-        $db = $this->getDb()->getAdapter();
-
-        $db->query(
+        $this->adapter->query(
             sprintf("
              CREATE TABLE %s (
              patch_number int NOT NULL,
@@ -134,7 +130,7 @@ class DbPatch_Command_Abstract_DbDelegate_Sql extends DbPatch_Command_Abstract_D
              hash varchar(32) NOT NULL,
              description varchar(200) default NULL,
              PRIMARY KEY  (patch_number, branch)
-        )", $db->quoteIdentifier($this->getChangelogContainerName())
+        )", $this->adapter->quoteIdentifier($this->getChangelogContainerName())
             ));
 
 
@@ -142,8 +138,8 @@ class DbPatch_Command_Abstract_DbDelegate_Sql extends DbPatch_Command_Abstract_D
             return false;
         }
 
-        $this->getWriter()->line(sprintf("changelog table '%s' created", $this->getChangelogContainerName()));
-        $this->getWriter()->line("use 'dbpatch sync' to sync your patches");
+        $this->writer->line(sprintf("changelog table '%s' created", $this->getChangelogContainerName()));
+        $this->writer->line("use 'dbpatch sync' to sync your patches");
 
         return true;
     }
@@ -158,7 +154,7 @@ class DbPatch_Command_Abstract_DbDelegate_Sql extends DbPatch_Command_Abstract_D
             $description = $patchFile->description;
         }
 
-        if($this->isPatchApplied($patchFile->patch_number, $patchFile->branch)) {
+        if ($this->isPatchApplied($patchFile->patch_number, $patchFile->branch)) {
              $this->writer->warning(
                  sprintf(
                      'Skip %s, already exists in the changelog',
@@ -166,21 +162,19 @@ class DbPatch_Command_Abstract_DbDelegate_Sql extends DbPatch_Command_Abstract_D
                  )
              );
          } else {
-            $db = $this->getDb()->getAdapter();
-
             $sql = sprintf("
                 INSERT INTO %s (patch_number, branch, completed, filename, description, hash)
                 VALUES(%d, %s, %d, %s, %s, %s)",
-                           $db->quoteIdentifier($this->getChangelogContainerName()),
+                           $this->adapter->quoteIdentifier($this->getChangelogContainerName()),
                            $patchFile->patch_number,
-                           $db->quote($patchFile->branch),
+                           $this->adapter->quote($patchFile->branch),
                            time(),
-                           $db->quote($patchFile->basename),
-                           $db->quote($description),
-                           $db->quote($patchFile->hash)
+                           $this->adapter->quote($patchFile->basename),
+                           $this->adapter->quote($description),
+                           $this->adapter->quote($patchFile->hash)
             );
 
-            $db->query($sql);
+            $this->adapter->query($sql);
             $this->writer->line(
                 sprintf(
                     'added %s to the changelog ',
@@ -191,18 +185,37 @@ class DbPatch_Command_Abstract_DbDelegate_Sql extends DbPatch_Command_Abstract_D
     }
 
     /**
+     * Checks if the changelog table is present in the database
+     * @return bool
+     */
+    protected function changelogExists()
+    {
+        try {
+            return in_array(
+                $this->getChangelogContainerName(), $this->adapter->listTables()
+            );
+        } catch (Zend_Db_Adapter_Exception $e) {
+            throw new DbPatch_Exception('Database error: ' . $e->getMessage());
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+
+    /**
      *
      * {@inheritdoc}
      */
     public function getDumpFilename()
     {
         $filename = null;
-        $config = $this->getDb()->getAdapter()->getConfig();
+        $config = $this->adapter->getConfig();
         $database = $config['dbname'];
 
-        if ($this->console->issetOption('file')) {
-            $filename = $this->console->getOptionValue('file', null);
-        }
+        // TODO: $this->console is not available, file option should be passed
+        $filename = 'dump';
+        // if ($this->console->issetOption('file')) {
+        //     $filename = $this->console->getOptionValue('file', null);
+        // }
 
         if (is_null($filename)) {
             // split by slash, database name can be a path (in case of SQLite)
