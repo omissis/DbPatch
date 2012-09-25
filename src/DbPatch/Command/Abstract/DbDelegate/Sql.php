@@ -96,9 +96,7 @@ class DbPatch_Command_Abstract_DbDelegate_Sql extends DbPatch_Command_Abstract_D
      */
     public function updateColumnType()
     {
-        // TODO pass the config->db->adapter in order to check if the column name should be updated
-        // $adapter = strtolower($this->config->db->adapter);
-        // if (in_array($adapter, array('mysql', 'mysqli', 'pdo_mysql'))) {
+        if (strstr(strtolower(get_class($this->adapter)), 'mysql')) {
             $columns = $this->adapter->describeTable($this->getChangelogContainerName());
             foreach($columns as $columnName => $meta) {
                 if ($columnName == 'completed' && strtolower($meta['DATA_TYPE']) == 'timestamp') {
@@ -108,7 +106,7 @@ class DbPatch_Command_Abstract_DbDelegate_Sql extends DbPatch_Command_Abstract_D
                     $this->writer->line('Updated column type');
                 }
             }
-        // }
+        }
     }
 
     /**
@@ -189,7 +187,7 @@ class DbPatch_Command_Abstract_DbDelegate_Sql extends DbPatch_Command_Abstract_D
      * Checks if the changelog table is present in the database
      * @return bool
      */
-    protected function changelogExists()
+    public function changelogExists()
     {
         try {
             return in_array(
