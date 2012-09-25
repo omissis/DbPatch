@@ -75,7 +75,7 @@ class DbPatch_Command_Remove extends DbPatch_Command_Abstract implements DbPatch
 
         $this->commandDbDelegate = new $commandDbDelegateClass();
 
-        $this->commandDbDelegate->init($this->getDb()->getAdapter(), $this->getChangelogContainerName(), self::DEFAULT_BRANCH);
+        $this->commandDbDelegate->init($this->getDb()->getAdapter(), $this->getChangelogContainerName(), $this->getWriter());
 
         return $this;
     }
