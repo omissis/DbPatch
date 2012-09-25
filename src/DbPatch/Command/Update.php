@@ -71,7 +71,7 @@ class DbPatch_Command_Update extends DbPatch_Command_Abstract implements DbPatch
     {
         parent::init();
 
-        $commandDbDelegateClass = 'DbPatch_Command_Update_DbDelegate_' . ucfirst(strtolower($this->config->db->adapter));
+        $commandDbDelegateClass = $this->getDbDelegateClass('DbPatch_Command_Update_DbDelegate_');
 
         $this->commandDbDelegate = new $commandDbDelegateClass();
 
@@ -123,8 +123,7 @@ class DbPatch_Command_Update extends DbPatch_Command_Abstract implements DbPatch
             $this->writer->line('Skip patchnumbers: ' . implode(',', $patchNumbersToSkip));
         }
 
-        foreach ($patchFiles as $patchNr => $patchFile)
-        {
+        foreach ($patchFiles as $patchNr => $patchFile) {
             if (($patchFile->patch_number <> $latestPatchNumber + 1) && !$force) {
                 $this->writer->error(
                     sprintf('expected patch number %d instead of %d (%s). Use --force to override this check.',

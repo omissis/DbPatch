@@ -81,7 +81,7 @@ class DbPatch_Command_Status extends DbPatch_Command_Abstract implements DbPatch
     {
         parent::init();
 
-        $commandDbDelegateClass = 'DbPatch_Command_Status_DbDelegate_' . ucfirst(strtolower($this->config->db->adapter));
+        $commandDbDelegateClass = $this->getDbDelegateClass('DbPatch_Command_Status_DbDelegate_');
 
         $this->commandDbDelegate = new $commandDbDelegateClass();
 
