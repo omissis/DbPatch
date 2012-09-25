@@ -78,10 +78,9 @@ class DbPatch_Command_Abstract_DbDelegate_MongoDB extends DbPatch_Command_Abstra
      */
     public function isPatchApplied($patchNumber, $branch)
     {
-
         $cursor = $this->selectCollection()->find(array(
             'patch_number' => $patchNumber,
-            'branch' => $branch
+            'branch'       => $branch
         ));
 
         return $cursor->count() === 1;
@@ -105,7 +104,18 @@ class DbPatch_Command_Abstract_DbDelegate_MongoDB extends DbPatch_Command_Abstra
         }
 
         // Create Collection
-        $this->adapter->getMongoDB()->createCollection($this->changelogContainerName);
+        $collection = $this->adapter->getMongoDB()->createCollection($this->changelogContainerName);
+
+        // Create a unique index to make sure that there are no duplicates
+        // in the db that could break the patches flow due to bugs
+        $collection->ensureIndex(array(
+            'patch_number' => 1,
+            'branch'       => 1,
+        ), array(
+            'unique'   => true,
+            'dropDups' => true,
+            'safe'     => true,
+        ));
 
         if (!$this->changelogExists()) {
             return false;
@@ -127,13 +137,11 @@ class DbPatch_Command_Abstract_DbDelegate_MongoDB extends DbPatch_Command_Abstra
         }
 
         if ($this->isPatchApplied($patchFile->patch_number, $patchFile->branch)) {
-             $this->writer->warning(
-                 sprintf(
-                     'Skip %s, already exists in the changelog',
-                     $patchFile->basename
-                 )
-             );
-         } else {
+            $this->writer->warning(sprintf(
+                'Skip %s, already exists in the changelog',
+                $patchFile->basename
+            ));
+        } else {
             $this->selectCollection()->insert(array(
                 'patch_number' => $patchFile->patch_number,
                 'branch'       => $patchFile->branch,
@@ -143,12 +151,10 @@ class DbPatch_Command_Abstract_DbDelegate_MongoDB extends DbPatch_Command_Abstra
                 'hash'         => $patchFile->hash,
             ), array('safe' => true));
 
-            $this->writer->line(
-                sprintf(
-                    'added %s to the changelog ',
-                    $patchFile->basename
-                )
-            );
+            $this->writer->line(sprintf(
+                'added %s to the changelog ',
+                $patchFile->basename
+            ));
         }
     }
 
