@@ -86,20 +86,24 @@ class DbPatch_Command_Status_DbDelegate_MongoDB extends DbPatch_Command_Status_D
             'description',
             'hash',
             'branch',
-        ))->sort(array(
-            'completed'    => -1,
-            'branch'       => 1,
-            'patch_number' => -1,
         ));
 
         $documents = array();
+        $order     = array();
+        $cnt       = 0;
         foreach ($cursor as $document) {
-            $document['branch'] = (int)($document['branch'] === $this->defaultBranch);
+            $document['branch'] = (int)($document['branch'] !== $this->defaultBranch);
 
-            $documents[] = $document;
+            $order['completed'][$cnt]    = $document['completed'];
+            $order['branch'][$cnt]       = $document['branch'];
+            $order['patch_number'][$cnt] = $document['patch_number'];
+
+            $documents[$cnt] = $document;
+
+            $cnt++;
         }
 
-        // TODO: sort $documents array by completed DESC, branch ASC, patch_number DESC
+        array_multisort($order['completed'], SORT_DESC, $order['branch'], SORT_ASC, $order['patch_number'], SORT_DESC, $documents);
 
         return $documents;
     }
