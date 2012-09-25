@@ -72,6 +72,41 @@ class DbPatch_Command_Remove_DbDelegate_MongoDB extends DbPatch_Command_Remove_D
      */
     public function removePatch($patchNumber, $branchName)
     {
-        // TODO: implement
+        $query = array('patch_number' => (int)$patchNumber);
+
+        if (!empty($branchName)) {
+            $query['branch'] = $branchName;
+        }
+
+        $collection = $this->adapter->selectCollection($this->changelogContainerName);
+
+        $cursor = $collection->find($query, array('branch'));
+
+        $patchRecords = array();
+        foreach ($cursor as $document) {
+            $patchRecords[] = $document;
+        }
+
+        if (count($patchRecords) == 0) {
+            $branchMsg = (empty($branchName) ? "" : "for branch '$branchName' ");
+            $this->writer->line("Patch $patchNumber not found {$branchMsg} in `" . $this->changelogContainerName . "` table");
+        }
+        else if (count($patchRecords) > 1) {
+            // @todo this is not happening anymore ???????
+            $branchArray = array();
+            foreach ($patchRecords as $branch) {
+                $branchArray[] = $branch['branch'];
+            }
+
+            $this->writer->line("There's a patch '$patchNumber' in multiple branches: '" . implode("', '", $branchArray) . "'");
+            $this->writer->line("Specify the correct branch by adding: 'branch=" . implode("' or 'branch=", $branchArray) . "' to the command");
+        }
+        else {
+            $branchMsg = (empty($branchName) ? "" : "from branch '$branchName' ");
+
+            $collection->remove($query, array('safe' => true));
+
+            $this->writer->line("Removed patch $patchNumber {$branchMsg}in the `" . $this->changelogContainerName . "` table");
+        }
     }
 }

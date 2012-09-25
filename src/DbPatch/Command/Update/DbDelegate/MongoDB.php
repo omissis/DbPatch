@@ -72,6 +72,36 @@ class DbPatch_Command_Update_DbDelegate_MongoDB extends DbPatch_Command_Update_D
      */
     public function getAppliedPatches($limit, $branch = '')
     {
-        // TODO: implement
+        $query = array();
+        if ($branch != '') {
+            $query['branch'] = $branch;
+        }
+
+        $collection = $this->adapter->selectCollection($this->changelogContainerName);
+
+        $cursor = $collection->find($query, array(
+            'patch_number',
+            'completed',
+            'filename',
+            'description',
+            'branch',
+        ))->sort(array(
+            'completed'    => -1,
+            'branch'       => 1,
+            'patch_number' => -1,
+        ))->limit($limit);
+
+        $documents = array();
+        foreach ($cursor as $document) {
+            $document['branch'] = (int)($document['branch'] === $this->defaultBranch);
+
+            $documents[] = $document;
+        }
+
+        // var_dump($documents);exit;
+
+        // TODO: sort $documents array by completed DESC, branch ASC, patch_number DESC
+
+        return $documents;
     }
 }
