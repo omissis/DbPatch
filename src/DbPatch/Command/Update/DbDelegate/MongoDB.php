@@ -88,7 +88,11 @@ class DbPatch_Command_Update_DbDelegate_MongoDB extends DbPatch_Command_Update_D
         ))->limit($limit);
 
         $documents = array();
-        $order     = array();
+        $order     = array(
+            'completed'    => array(),
+            'branch'       => array(),
+            'patch_number' => array(),
+        );
         $cnt       = 0;
         foreach ($cursor as $document) {
             $document['branch'] = (int)($document['branch'] !== $this->defaultBranch);
