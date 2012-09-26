@@ -79,11 +79,4 @@ abstract class DbPatch_Command_DelegateAbstract extends DbPatch_Command_Abstract
     {
         return $this->commandDbDelegate;
     }
-
-    /**
-     * Initialize Command
-     *
-     * @return DbPatch_Command_DelegateAbstract
-     */
-    abstract public function init();
 }
