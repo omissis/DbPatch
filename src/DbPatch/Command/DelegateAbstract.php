@@ -4,6 +4,7 @@
  *
  * Copyright (c) 2011, Sandy Pleyte.
  * Copyright (c) 2010-2011, Martijn De Letter.
+ * Copyright (c) 2012, Claudio Beatrice.
  *
  * All rights reserved.
  *
@@ -42,13 +43,14 @@
  * @author Martijn De Letter
  * @copyright 2011 Sandy Pleyte
  * @copyright 2010-2011 Martijn De Letter
+ * @copyright 2012 Claudio Beatrice
  * @license http://www.opensource.org/licenses/bsd-license.php BSD License
  * @link http://www.github.com/dbpatch/DbPatch
  * @since File available since Release 1.0.0
  */
 
 /**
- * Remove patch from the changelog command
+ * Abstract command class
  *
  * @package DbPatch
  * @subpackage Command
@@ -56,75 +58,32 @@
  * @author Martijn De Letter
  * @copyright 2011 Sandy Pleyte
  * @copyright 2010-2011 Martijn De Letter
+ * @copyright 2012 Claudio Beatrice
  * @license http://www.opensource.org/licenses/bsd-license.php BSD License
  * @link http://www.github.com/dbpatch/DbPatch
  * @since File available since Release 1.0.0
  */
-class DbPatch_Command_Remove extends DbPatch_Command_DelegateAbstract implements DbPatch_Command_Remove_DbDelegate_Interface
+abstract class DbPatch_Command_DelegateAbstract extends DbPatch_Command_Abstract
 {
+    /**
+     * @var DbPatch_Command_Status_DbDelegate_Interface
+     */
+    protected $commandDbDelegate;
+
+    /**
+     * Get the command database delegate object
+     *
+     * @return DbPatch_Command_Status_DbDelegate_Interface
+     */
+    public function getCommandDbDelegate()
+    {
+        return $this->commandDbDelegate;
+    }
+
     /**
      * Initialize Command
      *
-     * @return DbPatch_Command_Status
+     * @return DbPatch_Command_DelegateAbstract
      */
-    public function init()
-    {
-        parent::init();
-
-        $commandDbDelegateClass = $this->getDbDelegateClass('DbPatch_Command_Remove_DbDelegate_');
-
-        $this->commandDbDelegate = new $commandDbDelegateClass();
-
-        $this->commandDbDelegate->init($this->getDb()->getAdapter(), $this->getChangelogContainerName(), $this->getWriter());
-
-        return $this;
-    }
-
-    /**
-     * @return void
-     */
-    public function execute()
-    {
-        if ($this->console->issetOption('patch')) {
-            $patchNumbers = explode(",", $this->console->getOptionValue('patch', null));
-            $filteredPatchNumbers = array_filter($patchNumbers, 'is_numeric');
-
-            if (empty($filteredPatchNumbers)) {
-                $this->writer->error('no patch defined or patch isn\'t numeric');
-                return;
-            }
-
-            $branch = $this->getBranch();
-            foreach ($filteredPatchNumbers as $patchNumber) {
-                $this->removePatch($patchNumber, $branch);
-            }
-            return;
-        }
-        $this->writer->error('No patch defined or patch isn\'t numeric');
-        return;
-    }
-
-    /**
-     * Remove patch from the changelog table
-     *
-     * @param int $patchNumber
-     * @param string $branchName
-     * @return void
-     */
-    public function removePatch($patchNumber, $branchName)
-    {
-        return $this->commandDbDelegate->removePatch($patchNumber, $branchName);
-    }
-
-    /**
-     * @return void
-     */
-    public function showHelp($command = 'remove')
-    {
-        parent::showHelp($command);
-
-        $writer = $this->getWriter();
-        $writer->indent(2)->line('--patch=<int>      One or more patchnumbers seperated by a comma to remove')
-                ->line();
-    }
+    abstract public function init();
 }

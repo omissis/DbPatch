@@ -60,7 +60,7 @@
  * @link http://www.github.com/dbpatch/DbPatch
  * @since File available since Release 1.0.0
  */
-class DbPatch_Command_Update extends DbPatch_Command_Abstract implements DbPatch_Command_Update_DbDelegate_Interface
+class DbPatch_Command_Update extends DbPatch_Command_DelegateAbstract implements DbPatch_Command_Update_DbDelegate_Interface
 {
     /**
      * Initialize Command

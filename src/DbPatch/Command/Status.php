@@ -60,17 +60,12 @@
  * @link http://www.github.com/dbpatch/DbPatch
  * @since File available since Release 1.0.0
  */
-class DbPatch_Command_Status extends DbPatch_Command_Abstract implements DbPatch_Command_Status_DbDelegate_Interface
+class DbPatch_Command_Status extends DbPatch_Command_DelegateAbstract implements DbPatch_Command_Status_DbDelegate_Interface
 {
     /**
      * @var int
      */
     const LIMIT = 10;
-
-    /**
-     * @var DbPatch_Command_Status_DbDelegate_Interface
-     */
-    protected $commandDbDelegate;
 
     /**
      * Initialize Command
