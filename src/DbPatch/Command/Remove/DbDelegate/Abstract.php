@@ -65,12 +65,11 @@
  * @link http://www.github.com/dbpatch/DbPatch
  * @since File available since Release 1.0.0
  */
-abstract class DbPatch_Command_Remove_DbDelegate_Abstract implements DbPatch_Command_Remove_DbDelegate_Interface
+abstract class DbPatch_Command_Remove_DbDelegate_Abstract extends DbPatch_Command_DbDelegate_Abstract implements DbPatch_Command_Remove_DbDelegate_Interface
 {
-    protected $adapter;
-
-    protected $changelogContainerName;
-
+    /**
+     * @var DbPatch_Core_Writer
+     */
     protected $writer;
 
     /**
@@ -80,7 +79,7 @@ abstract class DbPatch_Command_Remove_DbDelegate_Abstract implements DbPatch_Com
      *
      * @return void
      */
-    public function init(Zend_Db_Adapter_Abstract $adapter, $changelogContainerName, $writer) {
+    public function init(Zend_Db_Adapter_Abstract $adapter, $changelogContainerName, DbPatch_Core_Writer $writer) {
         $this->adapter = $adapter;
         $this->changelogContainerName = $changelogContainerName;
         $this->writer = $writer;

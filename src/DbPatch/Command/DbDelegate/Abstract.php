@@ -51,7 +51,7 @@
  */
 
 /**
- * Status Command DbDelegate abstract class
+ * DbDelegate abstract class
  *
  * @package DbPatch
  * @subpackage Command
@@ -65,23 +65,64 @@
  * @link http://www.github.com/dbpatch/DbPatch
  * @since File available since Release 1.0.0
  */
-abstract class DbPatch_Command_Status_DbDelegate_Abstract extends DbPatch_Command_DbDelegate_Abstract implements DbPatch_Command_Status_DbDelegate_Interface
+abstract class DbPatch_Command_DbDelegate_Abstract
 {
+    /**
+     * @var Zend_Db_Adapter_Abstract
+     */
+    protected $adapter;
+
     /**
      * @var string
      */
-    protected $defaultBranch;
+    protected $changelogContainerName;
+
 
     /**
+     * Set the Database Adapter
      *
-     * @param Zend_Db_Adapter_MongoDB $adapter
-     * @param string $changelogContainerName
+     * @param Zend_Db_Adapter_Abstract
      *
-     * @return void
+     * @return DbPatch_Command_DbDelegate_Abstract
      */
-    public function init(Zend_Db_Adapter_Abstract $adapter, $changelogContainerName, $defaultBranch) {
+    public function setAdapter(Zend_Db_Adapter_Abstract $adapter)
+    {
         $this->adapter = $adapter;
+
+        return $this;
+    }
+
+    /**
+     * Get the Database Adapter
+     *
+     * @return Zend_Db_Adapter_Abstract
+     */
+    public function getAdapter()
+    {
+        return $this->adapter;
+    }
+
+    /**
+     * Set the Changelog Container name
+     *
+     * @param string
+     *
+     * @return DbPatch_Command_DbDelegate_Abstract
+     */
+    public function setChangelogContainerName($changelogContainerName)
+    {
         $this->changelogContainerName = $changelogContainerName;
-        $this->defaultBranch = $defaultBranch;
+
+        return $this;
+    }
+
+    /**
+     * Get the Changelog Container name
+     *
+     * @return string
+     */
+    public function getChangelogContainerName()
+    {
+        return $this->changelogContainerName;
     }
 }
