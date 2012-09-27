@@ -77,8 +77,8 @@ class DbPatch_Command_Update_DbDelegate_Sql extends DbPatch_Command_Update_DbDel
             $where = 'WHERE branch = ' . $this->adapter->quote($branch);
         }
 
-        $sql = sprintf("
-            SELECT
+        $sql = sprintf(
+            "SELECT
                 patch_number,
                 completed,
                 filename,

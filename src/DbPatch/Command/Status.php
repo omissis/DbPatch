@@ -101,22 +101,23 @@ class DbPatch_Command_Status extends DbPatch_Command_DelegateAbstract implements
         $this->showChangedPatches($patches);
 
         $limit = $this->getLimit();
-        $this->getWriter()->line()->line("applied patches (" . $limit . " latest)")->separate();
+        $this->getWriter()->line("applied patches (" . $limit . " latest)")->separate();
 
-        if (count($patches) == 0) {
-            $this->getWriter()->warning("no patches found")->line();
+        if (count($patches) === 0) {
+            $this->getWriter()->warning("no patches found");
         } else {
             // only show latest x patches
             if (count($patches) < $limit) {
                 $limit = count($patches);
             }
             for ($i = 0; $i < $limit; $i++) {
-
-                $this->writer->line(sprintf("%04d | %s | %s | %s",
-                                            $patches[$i]['patch_number'],
-                                            date('m-d-Y', $patches[$i]['completed']),
-                                            $patches[$i]['filename'],
-                                            $patches[$i]['description']));
+                $this->writer->line(sprintf(
+                    "%04d | %s | %s | %s",
+                    $patches[$i]['patch_number'],
+                    date('m-d-Y', $patches[$i]['completed']),
+                    $patches[$i]['filename'],
+                    $patches[$i]['description']
+                ));
             }
         }
     }
@@ -128,21 +129,25 @@ class DbPatch_Command_Status extends DbPatch_Command_DelegateAbstract implements
      */
     protected function showChangedPatches($patches)
     {
-        if (count($patches) == 0) return;
+        if (count($patches) === 0) {
+            return;
+        }
 
         $patchDirectory = $this->getPatchDirectory();
+        $printWhiteLine = false;
+
         if (is_dir($patchDirectory)) {
-            foreach($patches as $patch) {
+            foreach ($patches as $patch) {
                 $file = $patchDirectory . '/' . $patch['filename'];
                 if (file_exists($file)) {
-
                     $hash = hash_file('crc32', $file);
-                    if($hash != $patch['hash']) {
+                    if ($hash != $patch['hash']) {
                         $this->getWriter()->warning(
                             $patch['filename'] .
                             ' has been changed since it\'s applied on ' .
                             date('m-d-Y', $patch['completed'])
                         );
+                        $printWhiteLine = true;
                     }
                 } else {
                     $this->getWriter()->warning(
@@ -150,7 +155,11 @@ class DbPatch_Command_Status extends DbPatch_Command_DelegateAbstract implements
                         ' has been removed after it was applied on ' .
                         date('m-d-Y', $patch['completed'])
                     );
+                    $printWhiteLine = true;
                 }
+            }
+            if ($printWhiteLine) {
+                $this->getWriter()->line();
             }
         }
         return;
@@ -177,18 +186,20 @@ class DbPatch_Command_Status extends DbPatch_Command_DelegateAbstract implements
             $this->getWriter()->line("no patches found")->line();
         } else {
             foreach ($patches as $patch) {
-                $this->getWriter()->line(sprintf("%04d | %s | %s",
-                                                 $patch->patchNumber,
-                                                 $patch->basename,
-                                                 $patch->description));
+                $this->getWriter()->line(sprintf(
+                    "%04d | %s | %s",
+                    $patch->patchNumber,
+                    $patch->basename,
+                    $patch->description
+                ));
             }
 
             $line = "use 'dbpatch update";
             if ($branch != $defaultBranch) {
                 $line .= " --branch={$branch}";
             }
-            $line .= "' to apply the patches\n";
-            $this->getWriter()->line()->line($line);
+            $line .= "' to apply the patches";
+            $this->getWriter()->line()->line($line)->line();
         }
     }
 

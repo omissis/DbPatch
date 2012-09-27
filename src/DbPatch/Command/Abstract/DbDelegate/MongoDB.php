@@ -122,7 +122,7 @@ class DbPatch_Command_Abstract_DbDelegate_MongoDB extends DbPatch_Command_Abstra
         }
 
         $this->writer->line(sprintf("changelog table '%s' created", $this->changelogContainerName));
-        $this->writer->line("use 'dbpatch sync' to sync your patches");
+        $this->writer->line("use 'dbpatch sync' to sync your patches")->line();
 
         return true;
     }

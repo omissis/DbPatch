@@ -138,7 +138,7 @@ class DbPatch_Command_Abstract_DbDelegate_Sql extends DbPatch_Command_Abstract_D
         }
 
         $this->writer->line(sprintf("changelog table '%s' created", $this->getChangelogContainerName()));
-        $this->writer->line("use 'dbpatch sync' to sync your patches");
+        $this->writer->line("use 'dbpatch sync' to sync your patches")->line();
 
         return true;
     }
