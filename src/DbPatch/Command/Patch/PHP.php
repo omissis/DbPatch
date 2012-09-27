@@ -84,7 +84,7 @@ class DbPatch_Command_Patch_PHP extends DbPatch_Command_Patch_Abstract
         $writer = $this->getWriter();
         $phpFile = $this->filename;
 
-        $writer->line('apply patch: ' . $this->basename);
+        $writer->line()->line('apply patch: ' . $this->basename);
 
         if (!file_exists($phpFile)) {
             $this->getWriter()->line(sprintf('php file %s doesn\'t exists', $phpFile));
@@ -92,13 +92,13 @@ class DbPatch_Command_Patch_PHP extends DbPatch_Command_Patch_Abstract
         }
 
         try {
-            
+
             $env = new DbPatch_Command_Patch_PHP_Environment();
             $env->setDb($this->getDb()->getAdapter())
                 ->setWriter($this->getWriter())
                 ->setConfig($this->getConfig())
                 ->install($phpFile);
-                
+
         } catch (Exception $e) {
             $this->getWriter()->line(sprintf('error php patch: %s', $e->getMessage()));
             return false;
@@ -141,4 +141,4 @@ class DbPatch_Command_Patch_PHP extends DbPatch_Command_Patch_Abstract
         $this->writeFile($patchDirectory . '/' . $filename, $content);
     }
 }
- 
+

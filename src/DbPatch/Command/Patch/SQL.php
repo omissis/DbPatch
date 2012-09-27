@@ -49,7 +49,7 @@
 
 /**
  * SQL Patch file
- * 
+ *
  * @package DbPatch
  * @subpackage Command_Patch
  * @author Sandy Pleyte
@@ -75,12 +75,12 @@ class DbPatch_Command_Patch_SQL extends DbPatch_Command_Patch_Abstract
 
     /**
      * Apply SQL Patch
-     * 
+     *
      * @return bool
      */
     public function apply()
     {
-        $this->writer->line('apply patch: ' . $this->basename);
+        $this->writer->line()->line('apply patch: ' . $this->basename);
         $content = file_get_contents($this->data['filename']);
         if ($content == '') {
             $this->writer->error(
@@ -140,8 +140,8 @@ class DbPatch_Command_Patch_SQL extends DbPatch_Command_Patch_Abstract
     /**
      * Fix "database schema has changed" error
      *
-     * The VACUUM option makes it harder to execute queries 
-     * while other session (i.e. import command) modify the 
+     * The VACUUM option makes it harder to execute queries
+     * while other session (i.e. import command) modify the
      * database. Reconnecting prevents the error.
      *
      * @return DbPatch_Command_Patch_SQL
