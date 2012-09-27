@@ -88,18 +88,20 @@ class DbPatch_Command_Status_DbDelegate_MongoDB extends DbPatch_Command_Status_D
             'branch',
         ));
 
+        $cnt       = 0;
         $documents = array();
         $order     = array(
             'completed'    => array(),
-            'branch'       => array(),
+            'branch_order' => array(),
             'patch_number' => array(),
         );
-        $cnt       = 0;
+
         foreach ($cursor as $document) {
-            $document['branch'] = (int)($document['branch'] !== $this->defaultBranch);
+            $document['branch_order'] = (int)($document['branch'] !== $this->defaultBranch);
+            unset($document['branch']);
 
             $order['completed'][$cnt]    = $document['completed'];
-            $order['branch'][$cnt]       = $document['branch'];
+            $order['branch_order'][$cnt] = $document['branch_order'];
             $order['patch_number'][$cnt] = $document['patch_number'];
 
             $documents[$cnt] = $document;
@@ -107,7 +109,7 @@ class DbPatch_Command_Status_DbDelegate_MongoDB extends DbPatch_Command_Status_D
             $cnt++;
         }
 
-        array_multisort($order['completed'], SORT_DESC, $order['branch'], SORT_ASC, $order['patch_number'], SORT_DESC, $documents);
+        array_multisort($order['completed'], SORT_DESC, $order['branch_order'], SORT_ASC, $order['patch_number'], SORT_DESC, $documents);
 
         return $documents;
     }
