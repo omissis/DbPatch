@@ -70,7 +70,7 @@ class DbPatch_Command_Update_DbDelegate_Sql extends DbPatch_Command_Update_DbDel
     /**
      * {@inheritdoc}
      */
-    public function getAppliedPatches($limit, $branch = '')
+    public function getAppliedPatches($branch = '')
     {
         $where = '';
         if ($branch != '') {
@@ -87,13 +87,12 @@ class DbPatch_Command_Update_DbDelegate_Sql extends DbPatch_Command_Update_DbDel
             FROM %s
             %s
             ORDER BY completed DESC, branch_order ASC, patch_number DESC
-            LIMIT %d",
+            LIMIT 1",
             $this->adapter->quote($this->defaultBranch),
             $this->adapter->quoteIdentifier($this->changelogContainerName),
-            $where,
-            (int)$limit
+            $where
         );
 
-        return $this->adapter->fetchAll($sql);
+        return array_shift($this->adapter->fetchAll($sql));
     }
 }

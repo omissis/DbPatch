@@ -70,9 +70,9 @@ interface DbPatch_Command_Update_DbDelegate_Interface
     /**
      * Return the already applied patches from the changelog table
      *
-     * @param int $limit
      * @param string $branch
+     *
      * @return array
      */
-    function getAppliedPatches($limit, $branch = '');
+    function getAppliedPatches($branch = '');
 }

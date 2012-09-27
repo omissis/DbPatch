@@ -70,7 +70,7 @@ class DbPatch_Command_Update_DbDelegate_MongoDB extends DbPatch_Command_Update_D
     /**
      * {@inheritdoc}
      */
-    public function getAppliedPatches($limit, $branch = '')
+    public function getAppliedPatches($branch = '')
     {
         $query = array();
         if ($branch != '') {

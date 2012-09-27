@@ -165,25 +165,25 @@ class DbPatch_Command_Update extends DbPatch_Command_DelegateAbstract implements
      */
     protected function getLastPatchNumber($branch)
     {
-        $patch = $this->getAppliedPatches(1, $branch);
+        $patch = $this->getAppliedPatches($branch);
 
-        if (count($patch) == 0) {
+        if (empty($patch)) {
             return 0;
         }
 
-        return $patch[0]['patch_number'];
+        return $patch['patch_number'];
     }
 
     /**
      * Return the already applied patches from the changelog table
      *
-     * @param int $limit
      * @param string $branch
+     *
      * @return array
      */
-    public function getAppliedPatches($limit, $branch = '')
+    public function getAppliedPatches($branch = '')
     {
-        return $this->commandDbDelegate->getAppliedPatches($limit, $branch);
+        return $this->commandDbDelegate->getAppliedPatches($branch);
     }
 
 
