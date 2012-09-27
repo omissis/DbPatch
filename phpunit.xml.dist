@@ -1,4 +1,15 @@
-<phpunit bootstrap="tests/bootstrap.php" colors="true">
+<phpunit
+    backupGlobals               = "false"
+    backupStaticAttributes      = "false"
+    colors                      = "true"
+    convertErrorsToExceptions   = "true"
+    convertNoticesToExceptions  = "true"
+    convertWarningsToExceptions = "true"
+    processIsolation            = "false"
+    stopOnFailure               = "false"
+    syntaxCheck                 = "true"
+    bootstrap                   = "tests/bootstrap.php">
+
   <testsuites>
     <testsuite name="Core">
       <directory>tests/src/DbPatch/Core</directory>
@@ -7,11 +18,13 @@
       <directory>tests/src/DbPatch/Command</directory>
     </testsuite>
   </testsuites>
+
   <filter>
       <whitelist addUncoveredFilesFromWhitelist="true">
             <directory suffix=".php">src/DbPatch</directory>
         </whitelist>
   </filter>
+
   <logging>
     <log type="coverage-html"
       title="DbPatch"
