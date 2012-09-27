@@ -85,7 +85,7 @@ class DbPatch_Command_Update_DbDelegate_MongoDB extends DbPatch_Command_Update_D
             'filename',
             'description',
             'branch',
-        ))->limit($limit);
+        ));
 
         $cnt       = 0;
         $documents = array();
@@ -110,6 +110,6 @@ class DbPatch_Command_Update_DbDelegate_MongoDB extends DbPatch_Command_Update_D
 
         array_multisort($order['completed'], SORT_DESC, $order['branch_order'], SORT_ASC, $order['patch_number'], SORT_DESC, $documents);
 
-        return $documents;
+        return array_shift($documents);
     }
 }
