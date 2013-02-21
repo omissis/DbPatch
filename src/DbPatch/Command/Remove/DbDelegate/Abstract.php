@@ -74,7 +74,7 @@ abstract class DbPatch_Command_Remove_DbDelegate_Abstract extends DbPatch_Comman
 
     /**
      *
-     * @param Zend_Db_Adapter_MongoDB $adapter
+     * @param Zend_Db_Adapter_Mongodb $adapter
      * @param string $changelogContainerName
      *
      * @return void

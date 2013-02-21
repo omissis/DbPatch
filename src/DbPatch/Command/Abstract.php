@@ -125,18 +125,7 @@ abstract class DbPatch_Command_Abstract implements DbPatch_Command_Abstract_DbDe
      */
     protected function getDbDelegateClass($prefix = 'DbPatch_Command_Abstract_DbDelegate_')
     {
-        $adapterName = strtolower($this->config->db->adapter);
-
-        switch ($adapterName) {
-            case 'mongodb':
-                $dbDelegateClass = $prefix . 'MongoDB';
-                break;
-            default:
-                $dbDelegateClass = $prefix . 'Sql';
-                break;
-        }
-
-        return $dbDelegateClass;
+        return $prefix . ucfirst(strtolower($this->config->db->adapter));
     }
 
     /**

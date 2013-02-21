@@ -65,7 +65,7 @@
  * @link http://www.github.com/dbpatch/DbPatch
  * @since File available since Release 1.0.0
  */
-class DbPatch_Core_Db_DbDelegate_MongoDB extends DbPatch_Core_Db_DbDelegate_Abstract
+class DbPatch_Core_Db_DbDelegate_Mongodb extends DbPatch_Core_Db_DbDelegate_Abstract
 {
     /**
      * This method just provides a fake implementation for mongodb

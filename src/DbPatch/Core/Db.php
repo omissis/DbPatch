@@ -111,18 +111,7 @@ class DbPatch_Core_Db implements DbPatch_Core_Db_DbDelegate_Interface
      */
     protected function getDbDelegateClass($prefix = 'DbPatch_Core_Db_DbDelegate_')
     {
-        $adapterName = strtolower($this->config->db->adapter);
-
-        switch ($adapterName) {
-            case 'mongodb':
-                $dbDelegateClass = $prefix . 'MongoDB';
-                break;
-            default:
-                $dbDelegateClass = $prefix . 'Sql';
-                break;
-        }
-
-        return $dbDelegateClass;
+        return $prefix . ucfirst(strtolower($this->config->db->adapter));
     }
 
     /**
@@ -156,12 +145,7 @@ class DbPatch_Core_Db implements DbPatch_Core_Db_DbDelegate_Interface
 
         if (($retval === false) || ($return <> 0)) {
             throw new DbPatch_Exception(
-                'Error importing file ' .
-                    $filename .
-                    "\n" .
-                    $commandLine .
-                    "\n" .
-                    implode(PHP_EOL, $result)
+                sprintf("Error importing file %s\n%s\n%s", $filename, $commandLine, implode(PHP_EOL, $result))
             );
         }
         return true;
@@ -183,12 +167,7 @@ class DbPatch_Core_Db implements DbPatch_Core_Db_DbDelegate_Interface
 
         if (($retval === false) || ($return <> 0)) {
             throw new DbPatch_Exception(
-                'Error dumping file ' .
-                    $filename .
-                    "\n" .
-                    $commandLine .
-                    "\n" .
-                    implode(PHP_EOL, $result)
+                sprintf("Error dumping file %s\n%s\n%s", $filename, $commandLine, implode(PHP_EOL, $result))
             );
         }
         return true;
