@@ -67,7 +67,7 @@ class DbPatch_Command_Dump extends DbPatch_Command_Abstract
      */
     public function execute()
     {
-        $filename = $this->getDumpFilename($this->config);
+        $filename = $this->getDumpFilename();
         $config   = $this->getDb()->getAdapter()->getConfig();
         $database = $config['dbname'];
 
